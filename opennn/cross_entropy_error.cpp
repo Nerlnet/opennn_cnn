@@ -17,8 +17,7 @@ namespace opennn
 /// It also initializes all the rest of the class members to their default values.
 
 CrossEntropyError::CrossEntropyError() : LossIndex()
-{
-}
+{}
 
 
 /// Neural network and data set constructor.
@@ -29,8 +28,7 @@ CrossEntropyError::CrossEntropyError() : LossIndex()
 
 CrossEntropyError::CrossEntropyError(NeuralNetwork* new_neural_network_pointer, DataSet* new_data_set_pointer)
     : LossIndex(new_neural_network_pointer, new_data_set_pointer)
-{
-}
+{}
 
 
 // \brief CrossEntropyError::calculate_error.
@@ -88,13 +86,13 @@ void CrossEntropyError::calculate_binary_error(const DataSetBatch& batch,
 
     const TensorMap<Tensor<type, 2>> targets(batch.targets_data, batch.targets_dimensions(0), batch.targets_dimensions(1));
 
-    Tensor<type, 2> binary_cross_entropy = - ((type(1)-targets)*((type(1)-outputs).log()));
+    Tensor<type, 2> binary_cross_entropy = - ((type(1)-targets)*((type(1)-(outputs+EPSILON_TYPE)).log()));
 
     std::replace_if(binary_cross_entropy.data(), binary_cross_entropy.data()+binary_cross_entropy.size(), [](type x){return isnan(x);}, 0);
 
     Tensor<type, 0> cross_entropy_error;
 
-    cross_entropy_error.device(*thread_pool_device) = -(targets*(outputs.log())).sum() + binary_cross_entropy.sum();
+    cross_entropy_error.device(*thread_pool_device) = -(targets*((outputs+EPSILON_TYPE).log())).sum() + binary_cross_entropy.sum();
 
     back_propagation.error = cross_entropy_error()/static_cast<type>(batch_samples_number);
 
@@ -127,7 +125,7 @@ void CrossEntropyError::calculate_multiple_error(const DataSetBatch& batch,
     const TensorMap<Tensor<type, 2>> targets(batch.targets_data, batch.targets_dimensions(0), batch.targets_dimensions(1));
 
     Tensor<type, 0> cross_entropy_error;
-    cross_entropy_error.device(*thread_pool_device) = -(targets*(outputs.log())).sum();
+    cross_entropy_error.device(*thread_pool_device) = -(targets*((outputs+EPSILON_TYPE).log())).sum();
 
     back_propagation.error = cross_entropy_error()/static_cast<type>(batch_samples_number);
 
@@ -230,7 +228,7 @@ void CrossEntropyError::calculate_multiple_output_delta(const DataSetBatch& batc
 
     TensorMap<Tensor<type, 2>> deltas(probabilistic_layer_back_propagation->deltas_data, probabilistic_layer_back_propagation->deltas_dimensions(0), probabilistic_layer_back_propagation->deltas_dimensions(1));
 
-    deltas.device(*thread_pool_device) = static_cast<type>(1)/static_cast<type>(batch_samples_number) *(-targets/outputs);
+    deltas.device(*thread_pool_device) = static_cast<type>(1)/static_cast<type>(batch_samples_number) *(-targets/(outputs+EPSILON_TYPE));
 
     Tensor<type, 2> output_deltas(deltas);
 

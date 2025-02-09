@@ -31,6 +31,7 @@ namespace opennn
 
 class CrossEntropyError : public LossIndex
 {
+    #define EPSILON_TYPE type(1e-7)
 
 public:
 
