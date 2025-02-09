@@ -228,7 +228,7 @@ void CrossEntropyError::calculate_multiple_output_delta(const DataSetBatch& batc
 
     TensorMap<Tensor<type, 2>> deltas(probabilistic_layer_back_propagation->deltas_data, probabilistic_layer_back_propagation->deltas_dimensions(0), probabilistic_layer_back_propagation->deltas_dimensions(1));
 
-    deltas.device(*thread_pool_device) = static_cast<type>(1)/static_cast<type>(batch_samples_number) *(-targets/outputs);
+    deltas.device(*thread_pool_device) = static_cast<type>(1)/static_cast<type>(batch_samples_number) *(-targets/(outputs+EPSILON_TYPE));
 
     Tensor<type, 2> output_deltas(deltas);
 
